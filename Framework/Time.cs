@@ -3,16 +3,36 @@ namespace Foster.Framework;
 public static class Time
 {
 	/// <summary>
+	/// The default behavior is to lock the render rate to the update rate.
+	/// </summary>
+	public static TimeSpan RenderRateLocked = TimeSpan.Zero;
+
+	/// <summary>
+	/// Allows Render to be called as fast as user's monitor will allow.
+	/// </summary>
+	public static TimeSpan RenderRateUnlocked = TimeSpan.MinValue;
+
+	/// <summary>
 	/// Time in Seconds since our last Update.
 	/// In Fixed Timestep this always returns a constant value.
 	/// </summary>
 	public static float Delta;
 
 	/// <summary>
+	/// Time in Seconds since our last Render.
+	/// </summary>
+	public static float RenderDelta;
+
+	/// <summary>
 	/// An Accumulation of the Delta Time, incremented each Update.
 	/// In Fixed Timestep this is incremented by a constant value.
 	/// </summary>
 	public static TimeSpan Duration;
+
+	/// <summary>
+	/// An Accumulation of the Render Delta Time, incremented each Render.
+	/// </summary>
+	public static TimeSpan RenderDuration;
 
 	/// <summary>
 	/// Requests the current time since the Application was started.
@@ -27,6 +47,11 @@ public static class Time
 	public static ulong Frame = 0;
 
 	/// <summary>
+	/// Current render frame index
+	/// </summary>
+	public static ulong RenderFrame = 0;
+
+	/// <summary>
 	/// If the Application should run in Fixed Timestep mode
 	/// </summary>
 	public static bool FixedStep = true;
@@ -35,6 +60,13 @@ public static class Time
 	/// What the Fixed Timestep target is (defaults to 60fps, or 0.016s per frame)
 	/// </summary>
 	public static TimeSpan FixedStepTarget = TimeSpan.FromSeconds(1.0f / 60.0f);
+
+	/// <summary>
+	/// When running with FixedStep = true, tries to make sure the render rate won't exceed this value.
+	/// Default is to lock RenderRateTarget to FixedStepTarget by setting this value to RenderRateLocked.
+	/// For uncapped render rate (e.g. as fast as the user's monitor wil allow), set this to RenderRateUncapped.
+	/// </summary>
+	public static TimeSpan RenderRateTarget = RenderRateLocked;
 
 	/// <summary>
 	/// The maximum amount of time a Fixed Update is allowed to take before the Application starts dropping frames.
@@ -49,7 +81,16 @@ public static class Time
 		Delta = (float)delta.TotalSeconds;
 		Duration += delta;
 	}
-	
+
+	/// <summary>
+	/// Sets Render delta
+	/// </summary>
+	public static void AdvanceRender(TimeSpan delta)
+	{
+		RenderDelta = (float)delta.TotalSeconds;
+		RenderDuration += delta;
+	}
+
 	/// <summary>
 	/// Returns true when the elapsed time passes a given interval based on the delta time
 	/// </summary>

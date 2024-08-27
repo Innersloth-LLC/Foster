@@ -341,6 +341,7 @@ public static class App
 		// Clear Time
 		Time.Frame = 0;
 		Time.Duration = new();
+		Time.RenderDuration = new();
 		lastTime = TimeSpan.Zero;
 		accumulator = TimeSpan.Zero;
 		timer.Restart();
@@ -401,7 +402,6 @@ public static class App
 			Time.Frame++;
 			Time.Advance(delta);
 
-			Graphics.Resources.DeleteRequested();
 			Input.Step();
 			PollEvents();
 			FramePool.NextFrame();
@@ -409,43 +409,80 @@ public static class App
 			for (int i = 0; i < modules.Count; i ++)
 				modules[i].Update();
 		}
-		
-		Platform.FosterBeginFrame();
+
+		static void Render(TimeSpan delta)
+		{
+			Time.RenderFrame++;
+			Time.AdvanceRender(delta);
+
+			Graphics.Resources.DeleteRequested();
+
+			for (int i = 0; i < modules.Count; i++)
+				modules[i].Render();
+		}
+
+		var deltaTime = timer.Elapsed - lastTime;
+
+		// Try to hit RenderRateTarget if one was specified.
+		if (Time.RenderRateTarget > TimeSpan.Zero)
+		{
+			var sleepTime = Time.RenderRateTarget - deltaTime;
+			while (sleepTime.TotalMilliseconds > 1)
+			{
+				Thread.Sleep((int)sleepTime.TotalMilliseconds);
+				deltaTime = Time.Now - lastTime;
+				sleepTime = Time.RenderRateTarget - deltaTime;
+			}
+		}
 
 		var currentTime = timer.Elapsed;
-		var deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
+
+		Platform.FosterBeginFrame();
 
 		if (Time.FixedStep)
 		{
 			accumulator += deltaTime;
 
-			// Do not let us run too fast
-			while (accumulator < Time.FixedStepTarget)
+			if (accumulator < Time.FixedStepTarget)
 			{
-				int milliseconds = (int)(Time.FixedStepTarget - accumulator).TotalMilliseconds;
-				Thread.Sleep(milliseconds);
-
-				currentTime = timer.Elapsed;
-				deltaTime = currentTime - lastTime;
-				lastTime = currentTime;
-				accumulator += deltaTime;
+				// Wait for next FixedUpdate before allowing render
+				if (Time.RenderRateTarget == Time.RenderRateLocked)
+				{
+					while (accumulator >= Time.FixedStepTarget)
+					{
+						accumulator -= Time.FixedStepTarget;
+						Update(Time.FixedStepTarget);
+						if (Exiting)
+							break;
+					}
+				}
+				// Allow render while waiting for next FixedUpdate
+				else
+				{
+					currentTime = timer.Elapsed;
+					deltaTime = currentTime - lastTime;
+					lastTime = currentTime;
+					accumulator += deltaTime;
+				}
 			}
-
-			// Do not allow any update to take longer than our maximum.
-			if (accumulator > Time.FixedStepMaxElapsedTime)
+			else
 			{
-				Time.Advance(accumulator - Time.FixedStepMaxElapsedTime);
-				accumulator = Time.FixedStepMaxElapsedTime;
-			}
+				// Do not allow any update to take longer than our maximum.
+				if (accumulator > Time.FixedStepMaxElapsedTime)
+				{
+					Time.Advance(accumulator - Time.FixedStepMaxElapsedTime);
+					accumulator = Time.FixedStepMaxElapsedTime;
+				}
 
-			// Do as many fixed updates as we can
-			while (accumulator >= Time.FixedStepTarget)
-			{
-				accumulator -= Time.FixedStepTarget;
-				Update(Time.FixedStepTarget);
-				if (Exiting)
-					break;
+				// Do as many fixed updates as we can
+				while (accumulator >= Time.FixedStepTarget)
+				{
+					accumulator -= Time.FixedStepTarget;
+					Update(Time.FixedStepTarget);
+					if (Exiting)
+						break;
+				}
 			}
 		}
 		else
@@ -453,8 +490,7 @@ public static class App
 			Update(deltaTime);
 		}
 
-		for (int i = 0; i < modules.Count; i ++)
-			modules[i].Render();
+		Render(deltaTime);
 
 		Platform.FosterEndFrame();
 	}
