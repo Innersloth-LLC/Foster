@@ -421,7 +421,8 @@ public static class App
 				modules[i].Render();
 		}
 
-		var deltaTime = timer.Elapsed - lastTime;
+		var currentTime = timer.Elapsed;
+		var deltaTime = currentTime - lastTime;
 
 		// Try to hit RenderRateTarget if one was specified.
 		if (Time.RenderRateTarget > TimeSpan.Zero)
@@ -435,60 +436,48 @@ public static class App
 			}
 		}
 
-		var currentTime = timer.Elapsed;
-		lastTime = currentTime;
-
 		Platform.FosterBeginFrame();
 
 		if (Time.FixedStep)
 		{
 			accumulator += deltaTime;
 
-			if (accumulator < Time.FixedStepTarget)
+			// Wait for next FixedUpdate before allowing render
+			if (Time.RenderRateTarget == Time.RenderRateLocked)
 			{
-				// Wait for next FixedUpdate before allowing render
-				if (Time.RenderRateTarget == Time.RenderRateLocked)
+				while (accumulator < Time.FixedStepTarget)
 				{
-					while (accumulator >= Time.FixedStepTarget)
-					{
-						accumulator -= Time.FixedStepTarget;
-						Update(Time.FixedStepTarget);
-						if (Exiting)
-							break;
-					}
-				}
-				// Allow render while waiting for next FixedUpdate
-				else
-				{
-					currentTime = timer.Elapsed;
-					deltaTime = currentTime - lastTime;
-					lastTime = currentTime;
-					accumulator += deltaTime;
-				}
-			}
-			else
-			{
-				// Do not allow any update to take longer than our maximum.
-				if (accumulator > Time.FixedStepMaxElapsedTime)
-				{
-					Time.Advance(accumulator - Time.FixedStepMaxElapsedTime);
-					accumulator = Time.FixedStepMaxElapsedTime;
+					int sleepTime = (int)(Time.FixedStepTarget - accumulator).TotalMilliseconds;
+					Thread.Sleep(sleepTime);
+					accumulator += timer.Elapsed - lastTime;
 				}
 
-				// Do as many fixed updates as we can
-				while (accumulator >= Time.FixedStepTarget)
-				{
-					accumulator -= Time.FixedStepTarget;
-					Update(Time.FixedStepTarget);
-					if (Exiting)
-						break;
-				}
+				currentTime = timer.Elapsed;
+				deltaTime = currentTime - lastTime;
+			}
+
+			// Do not allow any update to take longer than our maximum.
+			if (accumulator > Time.FixedStepMaxElapsedTime)
+			{
+				Time.Advance(accumulator - Time.FixedStepMaxElapsedTime);
+				accumulator = Time.FixedStepMaxElapsedTime;
+			}
+
+			// Do as many fixed updates as we can
+			while (accumulator >= Time.FixedStepTarget)
+			{
+				accumulator -= Time.FixedStepTarget;
+				Update(Time.FixedStepTarget);
+				if (Exiting)
+					break;
 			}
 		}
 		else
 		{
 			Update(deltaTime);
 		}
+
+		lastTime = currentTime;
 
 		Render(deltaTime);
 
