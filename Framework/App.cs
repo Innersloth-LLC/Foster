@@ -403,6 +403,8 @@ public static class App
 			Time.Frame++;
 			Time.Advance(delta);
 
+			Input.Step();
+			PollEvents();
 			FramePool.NextFrame();
 
 			for (int i = 0; i < modules.Count; i ++)
@@ -414,7 +416,6 @@ public static class App
 			Time.RenderFrame++;
 			Time.AdvanceRender(delta);
 
-			Input.Step();
 			PollEvents();
 
 			Graphics.Resources.DeleteRequested();
@@ -423,20 +424,19 @@ public static class App
 				modules[i].Render();
 		}
 
+		// TODO: Test this...
 		// Try to hit RenderRateTarget if one was specified.
-		//if (Time.RenderRateTarget > TimeSpan.Zero)
-		//{
-		//	var sleepTime = Time.RenderRateTarget - deltaTime;
-		//	while (sleepTime.TotalMilliseconds > 1)
-		//	{
-		//		Thread.Sleep((int)sleepTime.TotalMilliseconds);
-		//		deltaTime = timer.Elapsed - lastTime;
-		//		sleepTime = Time.RenderRateTarget - deltaTime;
-		//	}
-
-		//	frameTime = timer.Elapsed;
-		//	deltaTime = frameTime - lastTime;
-		//}
+		if (Time.RenderRateTarget > TimeSpan.Zero)
+		{
+			var delta = timer.Elapsed - lastTime;
+			var sleepTime = Time.RenderRateTarget - delta;
+			while (sleepTime.TotalMilliseconds > 1)
+			{
+				Thread.Sleep((int)sleepTime.TotalMilliseconds);
+				delta = timer.Elapsed - lastTime;
+				sleepTime = Time.RenderRateTarget - delta;
+			}
+		}
 
 		Platform.FosterBeginFrame();
 		var currentTime = timer.Elapsed;
@@ -447,7 +447,7 @@ public static class App
 			accumulator += deltaTime;
 
 			// Wait for next FixedUpdate before allowing render
-			if (Time.RenderRateTarget == Time.RenderRateLocked)
+			if (Time.RenderRateTarget == TimeRates.RenderLocked)
 			{
 				var last = currentTime;
 				while (accumulator < Time.FixedStepTarget)
