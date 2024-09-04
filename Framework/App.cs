@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -421,22 +422,24 @@ public static class App
 				modules[i].Render();
 		}
 
-		var currentTime = timer.Elapsed;
-		var deltaTime = currentTime - lastTime;
-
 		// Try to hit RenderRateTarget if one was specified.
-		if (Time.RenderRateTarget > TimeSpan.Zero)
-		{
-			var sleepTime = Time.RenderRateTarget - deltaTime;
-			while (sleepTime.TotalMilliseconds > 1)
-			{
-				Thread.Sleep((int)sleepTime.TotalMilliseconds);
-				deltaTime = Time.Now - lastTime;
-				sleepTime = Time.RenderRateTarget - deltaTime;
-			}
-		}
+		//if (Time.RenderRateTarget > TimeSpan.Zero)
+		//{
+		//	var sleepTime = Time.RenderRateTarget - deltaTime;
+		//	while (sleepTime.TotalMilliseconds > 1)
+		//	{
+		//		Thread.Sleep((int)sleepTime.TotalMilliseconds);
+		//		deltaTime = timer.Elapsed - lastTime;
+		//		sleepTime = Time.RenderRateTarget - deltaTime;
+		//	}
+
+		//	frameTime = timer.Elapsed;
+		//	deltaTime = frameTime - lastTime;
+		//}
 
 		Platform.FosterBeginFrame();
+		var currentTime = timer.Elapsed;
+		var deltaTime = currentTime - lastTime;
 
 		if (Time.FixedStep)
 		{
@@ -445,11 +448,14 @@ public static class App
 			// Wait for next FixedUpdate before allowing render
 			if (Time.RenderRateTarget == Time.RenderRateLocked)
 			{
+				var last = currentTime;
 				while (accumulator < Time.FixedStepTarget)
 				{
-					int sleepTime = (int)(Time.FixedStepTarget - accumulator).TotalMilliseconds;
-					Thread.Sleep(sleepTime);
-					accumulator += timer.Elapsed - lastTime;
+					Thread.Sleep((int)(Time.FixedStepTarget - accumulator).TotalMilliseconds);
+					var current = timer.Elapsed;
+					var delta = current - last;
+					last = current;
+					accumulator += delta;
 				}
 
 				currentTime = timer.Elapsed;
@@ -477,9 +483,9 @@ public static class App
 			Update(deltaTime);
 		}
 
-		lastTime = currentTime;
-
 		Render(deltaTime);
+
+		lastTime = currentTime;
 
 		Platform.FosterEndFrame();
 	}
