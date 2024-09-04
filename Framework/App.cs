@@ -403,8 +403,6 @@ public static class App
 			Time.Frame++;
 			Time.Advance(delta);
 
-			Input.Step();
-			PollEvents();
 			FramePool.NextFrame();
 
 			for (int i = 0; i < modules.Count; i ++)
@@ -415,6 +413,9 @@ public static class App
 		{
 			Time.RenderFrame++;
 			Time.AdvanceRender(delta);
+
+			Input.Step();
+			PollEvents();
 
 			Graphics.Resources.DeleteRequested();
 
