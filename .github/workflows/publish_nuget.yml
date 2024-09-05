@@ -1,12 +1,7 @@
 name: Publish to Nuget
 
 on: 
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to checkout'
-        required: true
-        default: 'main'        
+  workflow_dispatch:   
 
 jobs:
   build:
@@ -28,6 +23,6 @@ jobs:
       - name: Add Source
         env:
           NUGET_PUSH_KEY: ${{ secrets.NUGET_PUSH_KEY }}
-        run: dotnet nuget add source https://ghostgame.pkgs.visualstudio.com/_packaging/Innersloth/nuget/v3/index.json --name Innersloth -u Username -p ${{ secrets.NUGET_PUSH_KEY }}
+        run: dotnet nuget add source https://ghostgame.pkgs.visualstudio.com/_packaging/Innersloth/nuget/v3/index.json --name Innersloth -u Username -p "${{ secrets.NUGET_PUSH_KEY }}"
       - name: Push
         run: dotnet nuget push InnerFosterFramework.${{ inputs.version }}.nupkg --source Innersloth -k az
