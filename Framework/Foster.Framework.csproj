@@ -91,7 +91,7 @@
     <Exec Command="dotnet pack &quot;$(SolutionDir)Framework\Foster.Framework.csproj&quot; -o &quot;$(SolutionDir)artifacts&quot; --configuration Release --no-build" />
   </Target>
 
-  <Target Name="PostBuildLinux" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(Configuration)' == 'Release'">
+  <Target Name="PostBuildLinux" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$(Configuration)' == 'Release' And '$(IsPacking)' != 'true'">
     <!-- Delete the old package if it exists, so we make sure the package is rebuilt every build -->
     <RemoveDir Directories="$(SolutionDir)artifacts/$(PackageId).$(Version)" Condition="Exists('$(SolutionDir)artifacts/$(PackageId).$(Version)')" />
     <!-- Clear local nuget cache -->
@@ -99,7 +99,7 @@
     <Exec Command="dotnet pack '$(SolutionDir)Framework/Foster.Framework.csproj' -o '$(SolutionDir)artifacts' --configuration Release --no-build" />
   </Target>
 
-  <Target Name="PostBuildMac" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('OSX')) And '$(Configuration)' == 'Release'">
+  <Target Name="PostBuildMac" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('OSX')) And '$(Configuration)' == 'Release' And '$(IsPacking)' != 'true'">
     <!-- Delete the old package if it exists, so we make sure the package is rebuilt every build -->
     <RemoveDir Directories="$(SolutionDir)artifacts/$(PackageId).$(Version)" Condition="Exists('$(SolutionDir)artifacts/$(PackageId).$(Version)')" />
     <!-- Clear local nuget cache -->
