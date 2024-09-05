@@ -83,11 +83,11 @@
     <None Include="$(ProjectDir)..\README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
   
-  <Target Name="PostBuildWindows" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(Configuration)' == 'Release'">
+  <Target Name="PostBuildWindows" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(Configuration)' == 'Release' And '$(IsPacking)' != 'true'">
     <!-- Delete the old package if it exists, so we make sure the package is rebuilt every build -->
     <RemoveDir Directories="$(SolutionDir)artifacts\$(PackageId).$(Version)" Condition="Exists('$(SolutionDir)artifacts\$(PackageId).$(Version)')" />
     <!-- Clear local nuget cache -->
-    <Exec Command="rd /s /q &quot;%25USERPROFILE%25\.nuget\packages\InnerFosterFramework&quot;" />
+    <Exec Command="rmdir /s /q &quot;%USERPROFILE%\.nuget\packages\InnerFosterFramework&quot;" />
     <Exec Command="dotnet pack &quot;$(SolutionDir)Framework\Foster.Framework.csproj&quot; -o &quot;$(SolutionDir)artifacts&quot; --configuration Release --no-build" />
   </Target>
 
