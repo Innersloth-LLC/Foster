@@ -424,7 +424,7 @@ public static class App
 				modules[i].Render();
 		}
 
-		// TODO: Test this...
+
 		// Try to hit RenderRateTarget if one was specified.
 		if (Time.RenderRateTarget > TimeSpan.Zero)
 		{
@@ -447,7 +447,7 @@ public static class App
 			accumulator += deltaTime;
 
 			// Wait for next FixedUpdate before allowing render
-			if (Time.RenderRateTarget == TimeRates.RenderLocked)
+			if (Time.RenderRateTarget == Time.Rates.RenderLocked)
 			{
 				var last = currentTime;
 				while (accumulator < Time.FixedStepTarget)

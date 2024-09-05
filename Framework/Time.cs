@@ -1,23 +1,23 @@
 namespace Foster.Framework;
 
-public static class TimeRates
-{
-	/// <summary>
-	/// The default behavior is to lock the render rate to the update rate.
-	/// </summary>
-	public static TimeSpan RenderLocked = TimeSpan.Zero;
-
-	/// <summary>
-	/// Allows Render to be called as fast as user's monitor will allow.
-	/// </summary>
-	public static TimeSpan RenderUnlocked = TimeSpan.MinValue;
-
-	public static TimeSpan FPS_60 = TimeSpan.FromSeconds(0.01666666666666666666666666666667);
-	public static TimeSpan FPS_30 = TimeSpan.FromSeconds(0.03333333333333333333333333333334);
-}
-
 public static class Time
 {
+	public static class Rates
+	{
+		/// <summary>
+		/// The default behavior is to lock the render rate to the update rate.
+		/// </summary>
+		public static TimeSpan RenderLocked = TimeSpan.Zero;
+
+		/// <summary>
+		/// Allows Render to be called as fast as user's monitor will allow.
+		/// </summary>
+		public static TimeSpan RenderUnlocked = TimeSpan.MinValue;
+
+		public static TimeSpan FPS_60 = TimeSpan.FromSeconds(0.01666666666666666666666666666667);
+		public static TimeSpan FPS_30 = TimeSpan.FromSeconds(0.03333333333333333333333333333334);
+	}
+
 	/// <summary>
 	/// Time in Seconds since our last Update.
 	/// In Fixed Timestep this always returns a constant value.
@@ -72,7 +72,7 @@ public static class Time
 	/// Default is to lock RenderRateTarget to FixedStepTarget by setting this value to RenderRateLocked.
 	/// For uncapped render rate (e.g. as fast as the user's monitor wil allow), set this to RenderRateUncapped.
 	/// </summary>
-	public static TimeSpan RenderRateTarget = TimeRates.RenderLocked;
+	public static TimeSpan RenderRateTarget = Rates.RenderLocked;
 
 	/// <summary>
 	/// The maximum amount of time a Fixed Update is allowed to take before the Application starts dropping frames.
