@@ -1,5 +1,12 @@
 name: Publish to Nuget
 
+on: 
+  workflow_dispatch:
+    inputs:
+      version:
+        required: false
+        type: string
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
