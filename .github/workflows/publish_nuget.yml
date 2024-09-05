@@ -6,6 +6,10 @@ on:
       version:
         required: false
         type: string
+      branch:
+        description: 'Branch to checkout'
+        required: true
+        default: 'main'        
 
 jobs:
   build:
